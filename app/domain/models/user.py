@@ -61,6 +61,7 @@ class User(Base, UUIDMixin, TimestampMixin):
     
     memories: Mapped[list["Memory"]] = relationship("Memory", back_populates="author")
     albums_created: Mapped[list["Album"]] = relationship("Album", back_populates="creator")
+    subscription: Mapped["Subscription | None"] = relationship("Subscription", back_populates="user", uselist=False, lazy="selectin")
     
     def __repr__(self) -> str:
         return f"<User {self.email}>"
