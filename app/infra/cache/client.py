@@ -42,5 +42,8 @@ def _key_watch_state(couple_id: str) -> str:
 def _key_night_state(couple_id: str) -> str:
     return f"night_state:{couple_id}"
 
+def _k_premium(uid: str) -> str:
+    return f"premium: {uid}"
+
 def _key_cache(namespace: str, key: str) -> str:
     return f"cache:{namespace}:{key}"
