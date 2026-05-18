@@ -3,6 +3,7 @@ import redis.asyncio as aioredis
 from typing import Annotated
 
 from fastapi import Depends
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.dependencies.auth import CurrentUser
 from app.core.exceptions import PremiumRequiredError
 
@@ -12,7 +13,7 @@ from app.infra.repositories.subscription_repo import SubscriptionRepository
 from app.infra.db.session import get_db_session
 from app.infra.cache.client import get_redis
 
-async def _resolve_is_premium(user: User, db, redis: aioredis.Redis) -> bool:
+async def _resolve_is_premium(user: User, db: AsyncSession, redis: aioredis.Redis) -> bool:
     cache = PremiumCache(redis)
     cached = await cache.get(str(user.id))
     if cached is not None:
