@@ -1,10 +1,11 @@
 from pydantic import BaseModel, field_validator
 from datetime import date, datetime
+from uuid import UUID
 import bleach
 
 class AlbumCreate(BaseModel):
     title: str
-    description: str | None
+    description: str 
     
     @field_validator("title")
     @classmethod
@@ -12,7 +13,7 @@ class AlbumCreate(BaseModel):
         v = bleach.clean(v.strip())
         if not v:
             raise ValueError("Titulo não pode ser vazio")
-        if len(v) > 200:
+        if len(v) > 150:
             raise ValueError("Titulo muito longo")
         return v
     
@@ -42,7 +43,7 @@ class AlbumResponse(BaseModel):
     couple_id: str
     title: str
     description: str | None = None
-    cover_url: str | None = None
+    cover_memory_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
     

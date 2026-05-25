@@ -1,5 +1,6 @@
 from pydantic import BaseModel, field_validator
 from datetime import date, datetime
+from fastapi import UploadFile
 import bleach
 
 class MemoryCreate(BaseModel):
@@ -9,7 +10,7 @@ class MemoryCreate(BaseModel):
     
     @field_validator("title")
     @classmethod
-    def sanitize_title(self, v: str) -> str:
+    def sanitize_title(cls, v: str) -> str:
         v = bleach.clean(v.strip())
         if not v or len(v)> 200:
             raise ValueError("Título inválido.")
@@ -17,7 +18,7 @@ class MemoryCreate(BaseModel):
     
     @field_validator("note")
     @classmethod
-    def sanitize_body(self, v: str | None) -> str | None:
+    def sanitize_body(cls, v: str | None) -> str | None:
         if v is None:
             return v
         return bleach.clean(v.strip(), tags=[], strip=True)
@@ -30,14 +31,14 @@ class MemoryUpdate(BaseModel):
     
     @field_validator("title")
     @classmethod
-    def sanitize_title(self, v: str | None) -> str | None:
+    def sanitize_title(cls, v: str | None) -> str | None:
         if v is None:
             return v
         return bleach.clean(v.strip())
     
     @field_validator("note")
     @classmethod
-    def sanitize_body(self, v: str | None) -> str | None:
+    def sanitize_body(cls, v: str | None) -> str | None:
         if v is None:
             return v
         return bleach.clean(v.strip(), tags=[], strip=True)
