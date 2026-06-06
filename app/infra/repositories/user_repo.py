@@ -14,6 +14,13 @@ class UserRepository(BaseRepository[User]):
         
         return result.scalar_one_or_none()
     
+    async def get_by_stripe_customer_id(self, stripe_customer_id: str) -> User | None:
+        r = await self.session.execute(
+            select(User).where(User.stripe_customer_id == stripe_customer_id)
+        )
+        
+        return r.scalar_one_or_none()
+    
     async def get_couple_partner(self, user: User) -> User | None:
         if not user.couple_id:
             return None

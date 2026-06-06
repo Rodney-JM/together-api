@@ -35,3 +35,6 @@ pytest-asyncio==0.23.7
 pytest-cov==5.0.0
 factory-boy==3.3.0
 faker==25.2.0
+
+#payment
+stripe==11.2.0
