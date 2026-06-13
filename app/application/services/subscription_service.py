@@ -2,10 +2,8 @@ from __future__ import annotations
 
 import json
 from datetime import datetime, timezone
-from nt import error
 from uuid import UUID
 
-from pydantic import MongoDsn
 import stripe
 import redis.asyncio as aioredis
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -64,7 +62,7 @@ class SubscriptionService:
     #public api
     async def get_plans(self) -> list[PlanResponse]:
         plans = await self.plans.get_all_active()
-        return [PlanResponse.model_validade(p) for p in plans]
+        return [PlanResponse.model_validate(p) for p in plans]
     
     async def get_my_subscription(self, user: User) -> SubscriptionResponse | None:
         sub = await self.subscriptions.get_by_user(user.id)
@@ -74,7 +72,7 @@ class SubscriptionService:
     
     async def create_checkout_session(self, user: User, billing_interval: BillingInterval) -> CheckoutSessionResponse:
         existing = await self.subscriptions.get_by_user(user.id)
-        if existing and existing.is_premium_active and existing.plan == PlanTier.PREMIUM:
+        if existing and existing.is_premium_active and existing.plan.tier == PlanTier.PREMIUM:
             raise ActiveSubscriptionError()
         
         stripe_customer_id = await self._ensure_stripe_customer(user)
@@ -101,7 +99,7 @@ class SubscriptionService:
                 "metadata": {"user_id": str(user.id)}
             },
             metadata={"user_id": str(user.id)},
-            success_url=settings.STRIPE_SUCCESS_URL + f"?session_id={CHECKOUT_SESSION_ID}",
+            success_url=settings.STRIPE_SUCCESS_URL + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=settings.STRIPE_CANCEL_URL,
             allow_promotion_codes=True,
             billing_address_collection="auto",
@@ -146,7 +144,26 @@ class SubscriptionService:
         stripe_sub_id: str | None = None
         
         try:
-            result = await self._disp
+            result = await self._dispatch(event)
+            user_id = result.get("user_id")
+            stripe_sub_id = result.get("stripe_sub")
+        except Exception as exc:
+            error = str(exc)
+            logger.error("webhook_processing_failed",
+                         event_id=stripe_event_id, error=error)
+            
+        
+        await self.subscription_events.record(
+            stripe_event_id=stripe_event_id,
+            event_type=event_type,
+            payload=raw_payload,
+            user_id=user_id,
+            stripe_subscription_id=stripe_sub_id,
+            error=error
+        )
+        
+        if error:
+            raise RuntimeError(error)
     
     #webhook dispatch
     async def _dispatch(self, event: dict) -> dict:
@@ -159,10 +176,21 @@ class SubscriptionService:
         
         elif event_type in ("customer.subscription.updated", "customer.subscription.created"):
             result = await self._on_subscription_updated(data)
-    
-    async def _on_subscription_updated(self, data: dict) -> dict:
-        stripe_sub_id = data.get("id")
-        user = await self._find
+            
+        elif event_type == "customer.subscription.deleted":
+            result = await self._on_subscription_deleted(data)
+        
+        elif event_type == "invoice.paid":
+            result = await self._on_invoice_paid(data)
+            
+        elif event_type == "invoice.payment_failed":
+            result = await self._on_payment_failed(data)
+        
+        elif event_type == "customer.subscription.trial_will_end":
+            logger.info("trial_ending_soon", stripe_sub_id=data.get("id"))
+        
+        else:
+            logger.debug("webhook_event_unhandled", event_type=event_type)
     
     
     async def _on_checkout_completed(self, data: dict) -> dict:
@@ -188,6 +216,76 @@ class SubscriptionService:
         
         logger.info("checkout_completed", user_id=user_id_str, stripe_sub_id=stripe_sub_id)
         return {"user_id": user.id, "stripe_sub_id": stripe_sub_id}
+    
+    async def _on_subscription_updated(self, data: dict) -> dict:
+        stripe_sub_id = data.get("id")
+        user = await self._find_user_by_stripe_customer(data.get("customer"))
+        if not user:
+            return {}
+        
+        await self._upsert_subscription(user, data)
+        logger.info("subscription_updated", stripe_sub_id=stripe_sub_id)
+        return {"user_id": user.id, "stripe_sub_id": stripe_sub_id}
+    
+    async def _on_subscription_deleted(self, data: dict) -> dict:
+        stripe_sub_id = data.get("id")
+        sub = await self.subscriptions.get_by_stripe_subscription_id(stripe_sub_id)
+        if not sub:
+            return {}
+        
+        sub.status = SubscriptionStatus.CANCELED
+        sub.canceled_at = datetime.now(timezone.utc)
+        await self.db.flush()
+        
+        free_plan = await self.plans.get_free_plan()
+        if free_plan:
+            sub.plan_id = free_plan.id
+        
+        await self.premium_cache.invalidate(str(sub.user_id))
+        
+        logger.info("subscription_canceled", stripe_sub_id=stripe_sub_id, user_id=str(sub.user_id))
+        return {"user_id": sub.user_id, "stripe_sub_id": stripe_sub_id}
+    
+    async def _on_invoice_paid(self, data: dict) -> dict:
+        stripe_sub_id = data.get("subscription")
+        if not stripe_sub_id:
+            return {}
+        
+        sub = await self.subscriptions.get_by_stripe_subscription_id(stripe_sub_id)
+        if not sub:
+            return {}
+        
+        sub.status = SubscriptionStatus.ACTIVE
+        sub.current_period_start = datetime.fromtimestamp(
+            data.get("period_start", 0), tz=timezone.utc
+        )
+        
+        sub.current_period_end = datetime.fromtimestamp(
+            data.get("period_end", 0), tz=timezone.utc
+        )
+        
+        await self.db.flush()
+        
+        await self.premium_cache.set(str(sub.user_id), True)
+        return {"user_id": sub.user_id, "stripe_sub_id": stripe_sub_id}
+        
+        
+    async def _on_payment_failed(self, data: dict) -> dict:
+        stripe_sub_id = data.get("subscription")
+        if not stripe_sub_id:
+            return {}
+        
+        sub = await self.subscriptions.get_by_stripe_subscription_id(stripe_sub_id)
+        
+        if not sub:
+            return {}
+        
+        sub.status = SubscriptionStatus.PAST_DUE
+        await self.db.flush()
+        
+        logger.warning("payment_failed", stripe_sub_id=stripe_sub_id, user_id=str(sub.user_id))
+        return {"user_id": sub.user_id, "stripe_sub_id": stripe_sub_id}
+        
         
     async def _upsert_subscription(self, user: User, stripe_sub: dict) -> None:
         stripe_sub_id = stripe_sub.get("id")
