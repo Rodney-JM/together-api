@@ -1,6 +1,8 @@
-from pydantic import BaseModel, field_validator
+from unicodedata import category
+from pydantic import BaseModel, field_validator, Field
 from datetime import date, datetime
-from fastapi import UploadFile
+from app.core.security import sanitize_input
+from app.domain.enums.memory_category import MemoryCategory
 import bleach
 
 class MemoryCreate(BaseModel):
@@ -57,3 +59,21 @@ class MemoryResponse(BaseModel):
     updated_at: datetime
     
     model_config = {"from_attributes": True}
+    
+class MemoryUploadRequest(BaseModel):
+    caption: str | None = Field(None, max_length=500)
+    category: MemoryCategory = MemoryCategory.OTHER
+    
+    @field_validator("caption", mode="before")
+    @classmethod
+    def clean(cls, v: str | None) -> str | None:
+        return sanitize_input(v.strip()) if v else None
+    
+class MemoryUpdateRequest(BaseModel):
+    caption: str | None = Field(None, max_length=500)
+    category: MemoryCategory | None = None
+    
+    @field_validator("caption", mode="before")
+    @classmethod
+    def clean(cls, v: str | None) -> str | None:
+        return sanitize_input(v.strip()) if v else None
