@@ -1,6 +1,9 @@
 from pydantic import BaseModel, field_validator
 from datetime import date, datetime
 from uuid import UUID
+
+from app.application.schemas.memory import MemoryResponse
+
 import bleach
 
 class AlbumCreate(BaseModel):
@@ -46,5 +49,7 @@ class AlbumResponse(BaseModel):
     cover_memory_id: UUID | None = None
     created_at: datetime
     updated_at: datetime
+    
+    memories: list[MemoryResponse] = []
     
     model_config = {"from_attributes": True}

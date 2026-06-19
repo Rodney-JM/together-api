@@ -26,6 +26,7 @@ class Plan(Base, UUIDMixin, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
     #limits
+    max_albums: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_album_photos: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_rituals: Mapped[int | None] = mapped_column(Integer, nullable=True)
     can_use_night_together: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

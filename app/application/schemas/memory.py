@@ -1,4 +1,3 @@
-from unicodedata import category
 from pydantic import BaseModel, field_validator, Field
 from datetime import date, datetime
 from app.core.security import sanitize_input
@@ -6,7 +5,7 @@ from app.domain.enums.memory_category import MemoryCategory
 import bleach
 
 class MemoryCreate(BaseModel):
-    title: str
+    title: str = Field(None, max_length=200)
     note: str | None = None
     memory_date: date | None = None
     
@@ -27,7 +26,7 @@ class MemoryCreate(BaseModel):
     
     
 class MemoryUpdate(BaseModel):
-    title: str | None = None
+    title: str | None = Field(None, max_length=200)
     note: str | None = None
     memory_date: date | None = None
     
