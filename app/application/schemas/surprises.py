@@ -26,6 +26,7 @@ class SurpriseResponse(BaseModel):
     opened_at: datetime | None = None
     sender_id: UUID
     media_s3_key: str | None = None
+    media_url: str | None = None
     created_at: datetime
     
     model_config = {"from_attributes": True}
