@@ -1,6 +1,6 @@
 from uuid import UUID
 
-from domain.models.album import Album
+from app.domain.models.album import Album
 from app.infra.repositories.base import BaseRepository
 
 class AlbumRepository(BaseRepository[Album]):
