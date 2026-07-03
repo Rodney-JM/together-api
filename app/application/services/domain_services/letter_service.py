@@ -85,6 +85,7 @@ class LetterService:
         offset = (page - 1) * page_size
         items, total = await self.repo.get_for_couple(
             couple_id=user.couple_id,
+            user_id=user.id,
             limit=page_size,
             offset=offset,
         )
