@@ -12,7 +12,7 @@ class NightSessionResponse(BaseModel):
     ambient_sound: str
     user1_id: UUID | None
     user1_joined_at: datetime | None
-    user2_id: UUID
+    user2_id: UUID | None
     user2_joined_at: datetime | None
     ended_at: datetime | None
     created_at: datetime
