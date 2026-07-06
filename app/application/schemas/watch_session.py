@@ -4,7 +4,7 @@ from uuid import UUID
 from datetime import datetime
 
 class WatchSessionCreateRequest(BaseModel):
-    media_title = str = Field(min_length=1, max_length=200)
+    media_title: str = Field(min_length=1, max_length=200)
     media_url: str | None = Field(None, max_length=1000)
     media_type: str = Field(default="external", max_length=30)
     
