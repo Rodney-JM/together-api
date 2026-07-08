@@ -1,6 +1,9 @@
 from uuid import UUID
+from datetime import datetime, timezone
+
 from sqlalchemy import select
 
+from app.domain.enums.mood_type import MoodType
 from app.domain.models.user import User
 from app.infra.repositories.base import BaseRepository
 
@@ -32,3 +35,10 @@ class UserRepository(BaseRepository[User]):
         )
         
         return result.scalar_one_or_none()
+    
+    async def update_mood(self, user: User, mood: MoodType) -> User:
+        user.current_mood = mood
+        user.mood_updated_at = datetime.now(timezone.utc)
+        await self.session.flush()
+        await self.session.refresh(user)
+        return user

@@ -1,8 +1,9 @@
 from uuid import UUID
 from datetime import date
-from sqlalchemy import select
+from sqlalchemy import select, func
 
-from app.domain.models.ritual import RitualEntry
+from app.domain.enums.ritual_status import RitualStatus
+from app.domain.models.ritual import Ritual, RitualEntry
 from app.infra.repositories.base import BaseRepository
 
 class RitualEntryRepository(BaseRepository[RitualEntry]):
@@ -40,3 +41,16 @@ class RitualEntryRepository(BaseRepository[RitualEntry]):
             limit=limit,
             offset=offset
         )
+    
+    async def count_today_completed_for_couple(self, couple_id: UUID, today: date) -> int:
+        result = await self.session.execute(
+            select(func.count())
+            .select_from(RitualEntry)
+            .join(Ritual, RitualEntry.ritual_id == Ritual.id)
+            .where(
+                Ritual.couple_id == couple_id,
+                RitualEntry.entry_date == today,
+                RitualEntry.status == RitualStatus.COMPLETED,
+            )
+        )
+        return result.scalar_one()

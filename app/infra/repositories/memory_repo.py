@@ -2,7 +2,7 @@ from app.domain.models.memory import Memory
 from app.infra.repositories.base import BaseRepository
 from uuid import UUID
 
-from sqlalchemy import select 
+from sqlalchemy import select
 
 class MemoryRepository(BaseRepository[Memory]):
     model = Memory
@@ -20,4 +20,13 @@ class MemoryRepository(BaseRepository[Memory]):
             select(Memory).where(Memory.album_id == album_id)
         )
         
+        return list(r.scalars().all())
+    
+    async def get_recent_by_couple(self, couple_id: UUID, limit: int = 6) -> list[Memory]:
+        r = await self.session.execute(
+            select(Memory)
+            .where(Memory.couple_id == couple_id)
+            .order_by(Memory.created_at.desc())
+            .limit(limit)
+        )
         return list(r.scalars().all())
