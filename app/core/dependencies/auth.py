@@ -9,7 +9,10 @@ from app.domain.models.user import User
 from app.core.exceptions import UnauthorizedError, CoupleRequiredError
 from app.core.security import verify_token
 
+from app.infra.db.session import get_db_session
+
 bearer = HTTPBearer(auto_error=False)
+DBSession = Annotated[object, Depends(get_db_session)]
 
 async def get_current_user(
     db=Depends(get_db_session),
