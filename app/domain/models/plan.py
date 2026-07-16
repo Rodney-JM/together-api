@@ -4,8 +4,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.infra.db.base import (
     Base, UUIDMixin, TimestampMixin
 )
-from domain.enums.plan_tier import PlanTier
-from domain.enums.billing_interval import BillingInterval
+from app.domain.enums.plan_tier import PlanTier
+from app.domain.enums.billing_interval import BillingInterval
 
 class Plan(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "plans"

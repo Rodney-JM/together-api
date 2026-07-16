@@ -4,7 +4,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import DateTime, String, Index, Text,func
 
-from infra.db.base import (
+from app.infra.db.base import (
     Base,
     UUIDMixin,
 )

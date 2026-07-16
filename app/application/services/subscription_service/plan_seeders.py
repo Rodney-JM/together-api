@@ -8,7 +8,7 @@ from sqlalchemy import select
 from app.domain.enums.billing_interval import BillingInterval
 from app.domain.models.plan import Plan
 from app.infra.repositories.plan_repo import PlanRepository
-from app.application.schemas.billing import PlanTier
+from app.domain.enums.plan_tier import PlanTier
 from app.domain.models.subscription import Subscription
 from app.domain.enums.subscription_status import SubscriptionStatus
 

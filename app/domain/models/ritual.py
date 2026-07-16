@@ -14,7 +14,7 @@ from app.infra.db.base import (
 
 class Ritual(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "rituals"
-    __table_args__ = (Index("ix_rituals_couple_id", "couple_id"))
+    __table_args__ = (Index("ix_rituals_couple_id", "couple_id"),)
     
     couple_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True),

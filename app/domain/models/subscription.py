@@ -42,7 +42,7 @@ class Subscription(Base, UUIDMixin, TimestampMixin):
         DateTime(timezone=True), nullable=True
     )
     trial_end: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    canceled_at: Mapped[datetime | None] = mapped_column(timezone=True, nullable=True)
+    canceled_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     
     cancel_at_period_end: Mapped[bool] = mapped_column(
         Boolean, default=False, nullable=False

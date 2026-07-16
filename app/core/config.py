@@ -56,7 +56,7 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "./uploads"
     MAX_UPLOAD_SIZE_MB: int = 10
     ALLOWED_IMAGE_TYPES: str = "image/jpeg,image/png,image/webp,image/jpg"
-    ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png", "webp"}
+    ALLOWED_EXTENSIONS: set[str] = {"jpg", "jpeg", "png", "webp"}
     
     @property
     def allowed_origins_list(self) -> list[str]:
@@ -108,9 +108,6 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     LOG_FORMAT: Literal["json", "console"] = "json"
     
-    class Config:
-        env_file = ".env"
-
 @lru_cache
 def get_settings() -> Settings:
     return Settings()

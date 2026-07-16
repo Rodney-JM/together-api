@@ -124,7 +124,7 @@ class SubscriptionService:
         return CustomerPortalResponse(portal_url=session.url)
     
     #webhook handler
-    async def handle_webhook(self, payload: bytes, signature: str) -> None:
+    async def handle_webhook(self, payload: bytes, signature: str) -> dict:
         #process a Stripe webhook event
         event = self._verify_webhook_signature(payload, signature)
         
@@ -137,7 +137,7 @@ class SubscriptionService:
         if await self.subscription_events.exists_by_stripe_event_id(stripe_event_id):
             logger.info("webhook_duplicate_skipped",
                         event_id=stripe_event_id)
-            return
+            return {}
         
         error: str | None = None
         user_id: UUID | None = None
@@ -164,6 +164,8 @@ class SubscriptionService:
         
         if error:
             raise RuntimeError(error)
+
+        return result
     
     #webhook dispatch
     async def _dispatch(self, event: dict) -> dict:
@@ -191,7 +193,8 @@ class SubscriptionService:
         
         else:
             logger.debug("webhook_event_unhandled", event_type=event_type)
-    
+
+        return result
     
     async def _on_checkout_completed(self, data: dict) -> dict:
         stripe_customer_id = data.get("customer")

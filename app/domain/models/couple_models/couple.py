@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from app.domain.enums.relationship_status import RelationshipStatus
 from app.domain.enums.subscription_status import SubscriptionStatus
 from sqlalchemy import ForeignKey, func, String, DateTime, Boolean, Enum, Index
@@ -12,7 +14,7 @@ import uuid
 
 class Couple(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "couples"
-    __table_args__ = (Index("ix_couples_invite_code", "invite_code", unique=True))
+    __table_args__ = (Index("ix_couples_invite_code", "invite_code", unique=True),)
     
     invite_code: Mapped[str] = mapped_column(
         String(12), unique=True, nullable=False, index=True
@@ -21,7 +23,7 @@ class Couple(Base, UUIDMixin, TimestampMixin):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     
     name: Mapped[str | None] = mapped_column(String(150), nullable=True)
-    relationship_start_date: Mapped[DateTime | None] = mapped_column(nullable=True)
+    relationship_start_date: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     relationship_status: Mapped[RelationshipStatus] = mapped_column(
         Enum(RelationshipStatus),
         default=RelationshipStatus.dating
@@ -43,9 +45,9 @@ class Couple(Base, UUIDMixin, TimestampMixin):
     
     subscription_status: Mapped[SubscriptionStatus] = mapped_column(
         Enum(SubscriptionStatus),
-        default=SubscriptionStatus.free
+        default=SubscriptionStatus.ACTIVE
     )
-    subscription_expires_at: Mapped[DateTime | None] = mapped_column(nullable=True)
+    subscription_expires_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     
     members: Mapped[list["User"]] = relationship(
         "User",

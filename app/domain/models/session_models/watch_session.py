@@ -12,7 +12,7 @@ from app.infra.db.base import (
 
 class WatchSession(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "watch_sessions"
-    __table_args__ = (Index("ix_watch_sessions_couple_id", "couple_id"))
+    __table_args__ = (Index("ix_watch_sessions_couple_id", "couple_id"),)
     
     couple_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("couples.id", ondelete="CASCADE"),

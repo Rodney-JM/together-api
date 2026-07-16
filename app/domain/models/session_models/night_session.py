@@ -11,7 +11,7 @@ from app.domain.enums.night_session_status import NightSessionStatus
 
 class NightSession(Base, UUIDMixin, TimestampMixin):
     __tablename__ = "night_sessions"
-    __table_args__ = (Index("ix_night_sessions_couple_id", "couple_id"))
+    __table_args__ = (Index("ix_night_sessions_couple_id", "couple_id"),)
     
     couple_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("couples.id", ondelete="CASCADE"),

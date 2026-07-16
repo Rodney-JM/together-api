@@ -9,7 +9,7 @@ class UserRegister(BaseModel):
     
     @field_validator("name")
     @classmethod
-    def sanitize_name(self, v: str)-> str:
+    def sanitize_name(cls, v: str)-> str:
         v = bleach.clean(v.strip())
         if len(v) < 2 or len(v) > 100:
             raise ValueError("Nome deve ter entre 2 e 100 caracteres")
@@ -17,7 +17,7 @@ class UserRegister(BaseModel):
     
     @field_validator("password")
     @classmethod
-    def validate_password(self, v: str) -> str:
+    def validate_password(cls, v: str) -> str:
         if len(v) < 8:
             raise ValueError("A senha deve conter pelo menos 8 caracteres")
         if not any(c.isupper() for c in v):

@@ -2,7 +2,7 @@ from sqlalchemy import String, ForeignKey, func, DateTime, BigInteger, Text, Ind
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.domain.enums.memory_category import AlbumCategory
+from app.domain.enums.memory_category import MemoryCategory as AlbumCategory
 from app.infra.db.base import(
     Base,
     TimestampMixin,
