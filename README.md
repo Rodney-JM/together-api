@@ -1,6 +1,6 @@
 # 💙 MacLoving - Backend
 
-Backend do projeto **Mac Loving**, uma plataforma pensada para casais em relacionamento à distância viverem o cotidiano juntos, mesmo estando fisicamente separados.
+Backend do projeto **Mac Loving**, uma plataforma pensada para casais em relacionamento à distância viverem o cotidiano juntos, mesmo estando fisicamente separados. x"
 
 > 🚧 Projeto em desenvolvimento — ainda em fase inicial (MVP)
 
